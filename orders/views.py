@@ -142,8 +142,14 @@ def cart_items(request):
         tp = 0
         for i in range(len(request.session["totalprice"])):
             tp += float(request.session["totalprice"][i])
+        
+        context =  {
+            "pizzacart": request.session["cart"], 
+            "totalprice": tp, 
+            "pcl": len(request.session["cart"]),
+            }
 
-        return render(request, "orders/cart.html", {"pizzacart": request.session["cart"], "totalprice": tp, "pcl": len(request.session["cart"])})
+        return render(request, "orders/cart.html", context)
     else:
         return render(request, "orders/cart.html", {"pizzacart": [], "totalprice": 0})
 
