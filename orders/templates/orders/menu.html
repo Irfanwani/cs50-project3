@@ -1,0 +1,101 @@
+{% extends "orders/base.html" %}
+
+{% block title %}
+    Menu
+{% endblock %}
+
+{% block body %}
+    <h1>Order your favorite Pizza here!</h1>
+    <form action="{% url 'orders:cart' %}" method="POST">
+        {% csrf_token %}
+        <select name="pizzatype">
+            <option>Regular Pizza</option>
+            <option>Sicilian Pizza</option>
+        </select>
+        <h4>Toppings</h4>
+        {% for topping in toppings %}
+            <input type="checkbox" value="{{ topping.name }}" name="{{ topping.name }}">{{ topping.name }}
+        {% endfor %}
+        <select name="size">
+            <option>Small</option>
+            <option>Large</option>
+        </select>
+        <input type="submit" value="Add to cart">
+    </form>
+
+    <hr>
+    
+    <h2>Subs</h2>
+    
+    <form action="{% url 'orders:cart' %}" method="POST">
+        {% csrf_token %}
+        <select name="subs">
+            {% for s in subs %}
+                <option>{{ s.name }}</option>
+            {% endfor %}
+        </select>
+        <h4>SubExtras</h4>
+        {% for s in subsextras %}
+            <input type="checkbox" value="{{ s.name }}" name="{{ s.name }}">{{ s.name }}
+        {% endfor %}
+        <select name="size">
+            <option>Small</option>
+            <option>Large</option>
+        </select>
+        <input type="submit" value="Add to cart">
+    </form>
+
+    <hr>
+
+    <h2>Pasta</h2>
+    <form action="{% url 'orders:cart' %}" method="POST">
+        {% csrf_token %}
+    <select name="pasta">
+        {% for p in pasta %}
+            <option>{{ p.name }}</option>
+        {% endfor %}
+    </select>
+    
+        <select name="size">
+            <option>Small</option>
+            <option>Large</option>
+        </select>
+        <input type="submit" value="Add to cart">
+    </form>
+
+    <hr>
+
+    <h2>Salads</h2>
+    <form action="{% url 'orders:cart' %}" method="POST">
+        {% csrf_token %}
+    <select name="salads">
+        {% for s in salads %}
+            <option>{{ s.name }}</option>
+        {% endfor %}
+    </select>
+
+        <select name="size">
+            <option>Small</option>
+            <option>Large</option>
+        </select>
+        <input type="submit" value="Add to cart">
+    </form>
+
+    <hr>
+
+    <h2>Dinner Platters</h2>
+    <form action="{% url 'orders:cart' %}" method="POST">
+        {% csrf_token %}
+    <select name="dinnerplatters">
+        {% for d in dinnerplatters %}
+            <option>{{ d.name }}</option>
+        {% endfor %}
+    </select>    
+    
+        <select name="size">
+            <option>Small</option>
+            <option>Large</option>
+        </select>
+        <input type="submit" value="Add to cart">
+    </form>
+{% endblock %}

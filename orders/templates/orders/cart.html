@@ -1,0 +1,32 @@
+{% extends "orders/base.html" %}
+
+{% block title %}
+    Cart
+{% endblock %}
+
+{% block body %}
+<h1>Here is your cart</h1>
+    {% if pizzacart %}
+    {% for pizza in pizzacart %}
+        {{ pizza }}
+    
+        <form action="{% url 'orders:remove' pizza_id=pizza %}" method="POST">
+            {% csrf_token %}
+            <input type="submit" value="Remove from cart">
+        </form>
+    
+        {% endfor %}
+        <hr>
+        
+        <h3>Total Price: ${{ totalprice }}</h3>
+        <h4>Total Items: {{ pcl }}</h4>
+
+    <form action="{% url 'orders:removeall' %}" method="POST">
+        {% csrf_token %}
+        <input type="submit" value="Remove All" style="float: right; margin: 0px 5% 5% 0px;">   
+    </form>
+    {% else %}
+        <p>Your cart is empty.</p>
+        <p><a href="{% url 'orders:menu' %}">Click here</a> to add items to your cart.</p>
+    {% endif %}
+{% endblock %}
