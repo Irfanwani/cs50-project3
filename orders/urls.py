@@ -8,6 +8,9 @@ urlpatterns = [
     path("menu", views.menu, name="menu"),
     path("cart", views.cart, name="cart"),
     path("cart_items", views.cart_items, name="cart_items"),
-    path("remove/<str:pizza_id>", views.remove, name="remove"),
+    path("remove/<int:pizza_id>", views.remove, name="remove"),
     path("removeall", views.removeall, name="removeall"),
+    path("order/<int:pizza_id>", views.order, name="order"),
+    path("orderall", views.orderall, name="orderall"),
+    path("cancelorder/<int:order_id>", views.cancelorder, name="cancelorder")
 ]

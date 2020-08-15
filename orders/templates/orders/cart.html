@@ -8,19 +8,48 @@
 <h1>Here is your cart</h1>
     {% if pizzacart %}
     {% for pizza in pizzacart %}
-        {{ pizza }}
-    
-        <form action="{% url 'orders:remove' pizza_id=pizza %}" method="POST">
+        <div>{{ pizza.details }}</div>
+            
+        <form action="{% url 'orders:order' pizza_id=pizza.id %}" method="POST">
             {% csrf_token %}
-            <input type="submit" value="Remove from cart">
+            <select name="pizzacount">
+                <option selected>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+                <option>8</option>
+                <option>9</option>
+                <option>10</option>
+            </select>
+            <div>
+                <input type="checkbox" name="t&c" required><small>I agree with the terms and conditions and i am ready to place an order.</small>
+            </div>
+            <input type="submit" value="Order Now">
         </form>
-    
-        {% endfor %}
+        
+        <form action="{% url 'orders:remove' pizza_id=pizza.id %}" method="POST">
+            {% csrf_token %}
+            <input type="submit" value="Remove from cart" style="float: right; margin: 0px 5% 5% 0px;">
+        </form>
+        <hr>
+    {% endfor %}
         <hr>
         
         <h3>Total Price: ${{ totalprice }}</h3>
         <h4>Total Items: {{ pcl }}</h4>
 
+        <form action="{% url 'orders:orderall' %}" method="POST">
+            {% csrf_token %}
+            <div>
+                <input type="checkbox" name="T&C" required><small>I agree with the Terms & Conditions.</small>
+            </div>
+                <input type="submit" value="Order All Pizzas">
+        </form>
+
+        
     <form action="{% url 'orders:removeall' %}" method="POST">
         {% csrf_token %}
         <input type="submit" value="Remove All" style="float: right; margin: 0px 5% 5% 0px;">   

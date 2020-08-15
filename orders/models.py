@@ -43,3 +43,17 @@ class DinnerPlatters(models.Model):
     name = models.CharField(max_length=64)
     max_price = models.FloatField()
     min_price = models.FloatField()
+
+
+class OrderList(models.Model):
+    name = models.CharField(max_length=64)
+    pizzaname = models.CharField(max_length=1000)
+    count = models.IntegerField()
+    total = models.FloatField()
+
+
+class Cart(models.Model):
+    name = models.CharField(max_length=64)
+    details = models.CharField(max_length=1000)
+    price = models.FloatField()
+

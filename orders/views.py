@@ -113,24 +113,25 @@ def cart(request):
     except:
         pass
 
-    if "cart" not in request.session:
-        request.session["cart"] = []
     if size == "Small":
         price = pza.min_price + (0.5 * len(sel))
     if size == "Large":
         price = pza.max_price + (0.5 * len(sel))
-    
-    if "totalprice" not in request.session:
-        request.session["totalprice"] = []
         
-    request.session["totalprice"].append(price)
-    
-    piz = [f"[{title}]<{pza.name}>Price: $<{price}><{tpl}><{size}>", ]
+    t = "Toppings"
+    if title == "Subs":
+        t = "Extras"
+    if tpl == []:
+        tpl = f'No {t} selected'
 
-    if f"[{title}]<{pza.name}>Price: $<{price}><{tpl}><{size}>" in request.session["cart"]:
-        messages.warning(request, "Item already in your cart.")
-        return HttpResponseRedirect(reverse("orders:menu"))
-    request.session["cart"] += piz
+    piz = f"[{title}] ({pza.name}) | Price: ${price} | {t}: {tpl} | Size: {size}"
+
+    mycart = Cart.objects.filter(name=request.user.username)
+    for p in mycart:
+        if piz == p.details:
+            messages.warning(request, "Item already in your cart.")
+            return HttpResponseRedirect(reverse("orders:menu"))
+    Cart.objects.create(name=request.user.username, details=piz, price=price)
     messages.success(request, f"{piz} added to cart!")
 
     return HttpResponseRedirect(reverse("orders:menu"))
@@ -138,29 +139,27 @@ def cart(request):
 
 @login_required(login_url="user:login")
 def cart_items(request):
-    if "cart" in request.session and "totalprice" in request.session:
+    try:
+        cartitems = Cart.objects.filter(name=request.user.username)
         tp = 0
-        for i in range(len(request.session["totalprice"])):
-            tp += float(request.session["totalprice"][i])
+        for item in cartitems:
+            tp += item.price
         
         context =  {
-            "pizzacart": request.session["cart"], 
+            "pizzacart": cartitems, 
             "totalprice": tp, 
-            "pcl": len(request.session["cart"]),
+            "pcl": Cart.objects.filter(name=request.user.username).count(),
             }
 
         return render(request, "orders/cart.html", context)
-    else:
+    except:
         return render(request, "orders/cart.html", {"pizzacart": [], "totalprice": 0})
 
 
 @login_required(login_url="user:login")
 def remove(request, pizza_id):
     try:
-        (request.session["totalprice"]).pop((request.session["cart"]).index(pizza_id))
-        request.session.modified = True
-        (request.session["cart"]).remove(pizza_id)
-        request.session.modified = True
+        Cart.objects.get(id=pizza_id).delete()
         messages.success(request, "Item removed from your cart.")
     except:
         pass
@@ -170,9 +169,77 @@ def remove(request, pizza_id):
 @login_required(login_url="user:login")
 def removeall(request):
     try:
-        del request.session["cart"]
-        del request.session["totalprice"]
+        Cart.objects.filter(name=request.user.username).delete()
         messages.success(request, "All items removed.")
     except:
         pass
     return HttpResponseRedirect(reverse("orders:cart_items"))
+
+
+@login_required(login_url="user:login")
+def order(request, pizza_id):
+    if request.method == "POST":
+        try:
+            request.POST["t&c"]
+            pz = Cart.objects.get(id=pizza_id)
+            pizzacount = int(request.POST["pizzacount"])
+            total = pz.price * pizzacount
+            if not OrderList.objects.filter(pizzaname=pz.details):
+                OrderList.objects.create(name=request.user.username, pizzaname=pz.details, count=pizzacount, total=total)
+            else:
+                mypiz = OrderList.objects.get(name=request.user.username, pizzaname=pz.details)
+                OrderList.objects.filter(name=request.user.username, pizzaname=pz.details).update(name=request.user.username, pizzaname=pz.details, count=mypiz.count + pizzacount, total=mypiz.total + total)
+            messages.success(request, "Order placed successfully!")
+            return HttpResponseRedirect(reverse("orders:cart_items"))
+        except:
+            messages.warning(request, "Please accept the Terms & Conditions.")
+            return HttpResponseRedirect(reverse("orders:cart_items"))
+    else:
+        return HttpResponseRedirect(reverse("orders:cart_items"))
+
+
+@login_required(login_url="user:login")
+def orderall(request):
+    if request.method == "POST":
+        try:
+            request.POST["T&C"]
+            mycart = Cart.objects.filter(name=request.user.username)
+            for pizza in mycart:
+                total = pizza.price
+                if OrderList.objects.filter(name=request.user.username, pizzaname=pizza.details):
+                    mypiz = OrderList.objects.get(name=request.user.username, pizzaname=pizza.details)
+                    OrderList.objects.filter(name=request.user.username, pizzaname=pizza.details).update(name=request.user.username, pizzaname=pizza.details, count=mypiz.count + 1, total=mypiz.total + total)
+
+                if not OrderList.objects.filter(name=request.user.username, pizzaname=pizza.details):
+                    OrderList.objects.create(name=request.user.username, pizzaname=pizza.details,count=1, total=total)
+            messages.success(request, "Order placed successfully!")
+            return HttpResponseRedirect(reverse("orders:cart_items"))
+        except:
+            messages.warning(request, "Please accept the Terms & Conditions.")
+            return HttpResponseRedirect(reverse("orders:cart_items"))
+    else:
+        if OrderList.objects.all() != None:
+            orders = OrderList.objects.filter(name=request.user.username)
+            tp = 0
+            for ordr in orders:
+                tp += ordr.total
+            context = {
+                    "orders": orders,
+                    "status": "Pending",
+                    "tp": tp
+                }
+            return render(request, "orders/orders.html", context)
+        else:
+            messages.info(request, "No orders placed.Place your orders here.")
+            return HttpResponseRedirect(reverse("orders:menu"))
+            
+
+
+@login_required(login_url="user:login")
+def cancelorder(request, order_id):
+    try:
+        OrderList.objects.get(id=order_id).delete()
+        messages.success(request, "Order cancelled successfully!")
+        return HttpResponseRedirect(reverse("orders:orderall"))
+    except:
+        pass
