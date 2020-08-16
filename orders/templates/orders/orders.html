@@ -20,16 +20,27 @@
                     <td>{{ ordr.pizzaname }}|  </td>
                     <td>{{ ordr.count }}|   </td>
                     <td>${{ ordr.total }}|  </td>
-                    <td>{{ status }}|</td>
-                    <td><form action="{% url 'orders:cancelorder' order_id=ordr.id %}" method="POST">
+                    <td>{{ ordr.status }}|</td>
+                    <td>
+                        {% if ordr.status != 'Delivered' %}
+                        <form action="{% url 'orders:cancelorder' order_id=ordr.id %}" method="POST">
                         {% csrf_token %}
                         <input type="submit" value="Cancel order">
                         <small>NOTE: You can't undo this action.</small>
-                    </form></td>
+                    </form>
+                    {% else %}
+                    <form action="{% url 'orders:updateorder' user=ordr.pizzaname %}" method="POST">
+                        {% csrf_token %}
+                        <input type="checkbox" name="recieved" value="I recieved my order."><small>I recieved the order.</small>
+                        <input type="submit" value="Mark as recieved">
+                    </form>
+                    {% endif %}
+                </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+   
     <hr>
     <h3>Total: ${{ tp }}</h3>
     {% else %}

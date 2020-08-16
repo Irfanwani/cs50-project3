@@ -49,6 +49,7 @@ class OrderList(models.Model):
     name = models.CharField(max_length=64)
     pizzaname = models.CharField(max_length=1000)
     count = models.IntegerField()
+    status = models.CharField(max_length=64)
     total = models.FloatField()
 
 

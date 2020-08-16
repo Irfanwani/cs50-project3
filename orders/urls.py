@@ -12,5 +12,7 @@ urlpatterns = [
     path("removeall", views.removeall, name="removeall"),
     path("order/<int:pizza_id>", views.order, name="order"),
     path("orderall", views.orderall, name="orderall"),
-    path("cancelorder/<int:order_id>", views.cancelorder, name="cancelorder")
+    path("cancelorder/<int:order_id>", views.cancelorder, name="cancelorder"),
+    path("checkorders", views.checkorders, name="checkorders"),
+    path("updateorder/<str:user>", views.updateorder, name="updateorder")
 ]

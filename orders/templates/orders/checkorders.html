@@ -1,0 +1,56 @@
+{% extends "orders/base.html" %}
+
+{% block title %}
+    Check orders
+{% endblock %}
+
+{% block body %}
+{% if orders %}
+<h1>Here are the orders from different costumers.</h1>
+{% for usr in users %}
+<div>
+    {% for key, value in orders.items %}
+    {% if key == usr.username %}
+    <h3>{{ usr.username }}</h3>
+    <form action="{% url 'orders:updateorder' user=usr.username %}" method="POST">
+        {% csrf_token %}
+        <select name="status">
+            <option>Pending</option>
+            <option>Delivered</option>
+            <option>Failed to deliver</option>
+        </select>
+        <input type="submit" value="Finish order">
+    </form>
+</div>
+<hr>
+<table>
+<tbody>
+    <tr>
+        <th>Order details   </th>
+        <th>Number of Pizzas   </th>
+        <th>Status   </th>
+        <th>Total</th>
+    </tr>
+    {% for ordr in value %}
+    <tr>
+        <td>{{ ordr.pizzaname }}</td>
+        <td>{{ ordr.count }}</td>
+        <td>{{ ordr.status }}</td>
+        <td>${{ ordr.total }}</td>
+    </tr>
+    {% endfor %}
+    {% endif %}
+    {% if key == usr.id %}
+    
+    <h3 style="float: right; margin: 0px 5% 5% 0px;">Total: ${{ value }}</h3>
+    {% endif %}
+{% endfor %}
+</tbody>
+</table>
+<br>
+<hr>
+{% endfor %}
+{% else %}
+    <h4>No order to show.</h4>
+{% endif %}
+{% endblock %}

@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate
 from django.urls import reverse
 from .models import *
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 
 # Create your views here.
 def index(request):
@@ -184,11 +185,11 @@ def order(request, pizza_id):
             pz = Cart.objects.get(id=pizza_id)
             pizzacount = int(request.POST["pizzacount"])
             total = pz.price * pizzacount
-            if not OrderList.objects.filter(pizzaname=pz.details):
-                OrderList.objects.create(name=request.user.username, pizzaname=pz.details, count=pizzacount, total=total)
+            if not OrderList.objects.filter(name=request.user.username, pizzaname=pz.details):
+                OrderList.objects.create(name=request.user.username, pizzaname=pz.details, count=pizzacount, status="Pending", total=total)
             else:
                 mypiz = OrderList.objects.get(name=request.user.username, pizzaname=pz.details)
-                OrderList.objects.filter(name=request.user.username, pizzaname=pz.details).update(name=request.user.username, pizzaname=pz.details, count=mypiz.count + pizzacount, total=mypiz.total + total)
+                OrderList.objects.filter(name=request.user.username, pizzaname=pz.details).update(count=mypiz.count + pizzacount, total=mypiz.total + total)
             messages.success(request, "Order placed successfully!")
             return HttpResponseRedirect(reverse("orders:cart_items"))
         except:
@@ -208,10 +209,10 @@ def orderall(request):
                 total = pizza.price
                 if OrderList.objects.filter(name=request.user.username, pizzaname=pizza.details):
                     mypiz = OrderList.objects.get(name=request.user.username, pizzaname=pizza.details)
-                    OrderList.objects.filter(name=request.user.username, pizzaname=pizza.details).update(name=request.user.username, pizzaname=pizza.details, count=mypiz.count + 1, total=mypiz.total + total)
+                    OrderList.objects.filter(name=request.user.username, pizzaname=pizza.details).update(count=mypiz.count + 1, total=mypiz.total + total)
 
                 if not OrderList.objects.filter(name=request.user.username, pizzaname=pizza.details):
-                    OrderList.objects.create(name=request.user.username, pizzaname=pizza.details,count=1, total=total)
+                    OrderList.objects.create(name=request.user.username, pizzaname=pizza.details, count=1, status="Pending", total=total)
             messages.success(request, "Order placed successfully!")
             return HttpResponseRedirect(reverse("orders:cart_items"))
         except:
@@ -225,7 +226,6 @@ def orderall(request):
                 tp += ordr.total
             context = {
                     "orders": orders,
-                    "status": "Pending",
                     "tp": tp
                 }
             return render(request, "orders/orders.html", context)
@@ -243,3 +243,45 @@ def cancelorder(request, order_id):
         return HttpResponseRedirect(reverse("orders:orderall"))
     except:
         pass
+
+
+@login_required(login_url="user:login")
+def checkorders(request):
+    if request.user.is_superuser:
+        odrs = {}
+        tp = 0
+        orders = OrderList.objects.all()
+        users = User.objects.all()
+        for usr in users:
+            if OrderList.objects.filter(name=usr.username):
+                odrs[usr.username] = OrderList.objects.filter(name=usr.username)
+                for ordr in odrs[usr.username]:
+                    tp += ordr.total
+                    odrs[usr.id] = tp
+            
+            tp = 0
+        context = {
+            "orders": odrs,
+            "users": users
+        }
+        return render(request, "orders/checkorders.html", context)
+    else:
+        return HttpResponseRedirect(reverse("orders:index"))
+
+
+@login_required(login_url="user:login")
+def updateorder(request, user):
+    try:
+        request.POST["recieved"]
+        OrderList.objects.get(name=request.user.username, pizzaname=user).delete()
+        return HttpResponseRedirect(reverse("orders:orderall"))
+    except:
+        pass
+    if request.user.is_superuser:
+        try:
+            status = request.POST["status"]
+            OrderList.objects.filter(name=user).update(status=status)
+            messages.info(request, "Order changed successfully.")
+            return HttpResponseRedirect(reverse("orders:checkorders"))
+        except:
+            pass

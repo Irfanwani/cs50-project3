@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +11,9 @@
   <nav>
     {% if request.user.is_authenticated %}
     <p>{{ user.username }}</p>
+    {% if request.user.is_superuser %}
+      <a href="{% url 'orders:checkorders' %}">Check Orders</a>
+    {% endif %}
     <a href="{% url 'orders:cart_items' %}">Cart</a>
     <a href="{% url 'user:logout' %}">Logout</a>
     <a href="{% url 'orders:menu' %}">Menu</a>
